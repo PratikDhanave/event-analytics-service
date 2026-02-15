@@ -1,0 +1,16 @@
+# binaries
+app
+*.exe
+
+# Go
+vendor/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# Docker runtime
+*.log
