@@ -1,6 +1,5 @@
--- Events table stores all ingested events.
--- tenant_id + event_id is primary key to enforce idempotency.
--- This ensures retries do not create duplicate events.
+-- Durable event storage.
+-- Idempotency is enforced via PRIMARY KEY (tenant_id, event_id).
 
 CREATE TABLE IF NOT EXISTS events (
   tenant_id   TEXT        NOT NULL,
@@ -12,7 +11,7 @@ CREATE TABLE IF NOT EXISTS events (
   PRIMARY KEY (tenant_id, event_id)
 );
 
--- Composite index optimized for metrics queries:
--- WHERE tenant_id=? AND event_name=? AND ts BETWEEN ...
+-- Index optimized for metrics queries:
+-- WHERE tenant_id=? AND event_name=? AND ts in [from,to)
 CREATE INDEX IF NOT EXISTS idx_events_tenant_name_ts
   ON events(tenant_id, event_name, ts);

@@ -3,41 +3,34 @@ package main
 import (
 	"log"
 
-	// local project packages
 	"github.com/PratikDhanave/event-analytics-service/internal/config"
 	"github.com/PratikDhanave/event-analytics-service/internal/httpserver"
 	"github.com/PratikDhanave/event-analytics-service/internal/store"
 )
 
+// main boots the service: config → DB → schema → HTTP server.
 func main() {
-
-	// Load runtime configuration (DB connection etc.)
+	// Load runtime config from environment (DB_URL, API_KEYS).
 	cfg, err := config.Load()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Create Postgres connection pool.
-	// pgxpool automatically manages connection reuse.
+	// Connect to durable storage (Postgres) using a connection pool.
 	db, err := store.NewPostgresStore(cfg.DBURL)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
-	// Ensure tables/indexes exist.
-	// This allows "docker compose up" to fully bootstrap the service.
+	// Ensure required tables/indexes exist so `docker compose up --build` is enough.
 	if err := db.EnsureSchema(); err != nil {
 		log.Fatal(err)
 	}
 
-	// Build HTTP router and inject DB dependency.
-	router := httpserver.NewRouter(db)
+	// Build HTTP router (public health + authenticated APIs).
+	router := httpserver.NewRouter(cfg, db)
 
 	log.Println("server started on :8080")
-
-	// Start HTTP server (blocking call).
-	if err := router.Run(":8080"); err != nil {
-		log.Fatal(err)
-	}
+	log.Fatal(router.Run(":8080"))
 }

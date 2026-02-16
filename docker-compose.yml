@@ -19,6 +19,9 @@ services:
     build: .
     environment:
       DB_URL: postgres://analytics:analytics@postgres:5432/analytics?sslmode=disable
+      # Two tenants so we can prove tenant isolation in tests.
+      # Format: "tenant:key,tenant:key"
+      API_KEYS: "tenant1:tenant-key-123,tenant2:tenant-key-456"
     ports:
       - "8080:8080"
     depends_on:
